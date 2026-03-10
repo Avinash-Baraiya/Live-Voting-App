@@ -1,0 +1,16 @@
+target/
+*.class
+*.jar
+*.war
+*.ear
+.idea/
+*.iml
+*.iws
+*.ipr
+.DS_Store
+.settings/
+.classpath
+.project
+*.log
+*.tmp
+node_modules/

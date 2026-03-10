@@ -1,0 +1,46 @@
+version: '3.9'
+
+services:
+  app:
+    build: .
+    container_name: live-voting-app
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME:-postgres}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - voting-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: live-voting-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - voting-net
+
+volumes:
+  redis_data:
+
+networks:
+  voting-net:
+    driver: bridge
