@@ -1,0 +1,54 @@
+# Java build / IDE / OS files
+
+# Compiled class files
+*.class
+
+# Log files
+*.log
+
+# Package files
+*.jar
+*.war
+*.ear
+
+# Maven
+target/
+dependency-reduced-pom.xml
+release.properties
+
+# Maven wrapper
+.mvn/wrapper/maven-wrapper.jar
+.mvn/wrapper/maven-wrapper.properties
+mvnw
+mvnw.cmd
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# IntelliJ
+.idea/
+*.iml
+*.iws
+out/
+
+# NetBeans
+nbproject/private/
+nbbuild/
+dist/
+
+# VS Code
+.vscode/
+
+# OS files
+.DS_Store
+
+# Environment files
+.env
+
+# Redis/DB logs
+logs/
+
+# Temporary files
+*~
