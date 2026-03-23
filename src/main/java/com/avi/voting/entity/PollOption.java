@@ -13,7 +13,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "poll_options", indexes = {
+@Table(name = "poll_option", indexes = {
         @Index(name = "idx_poll_option_poll_id", columnList = "poll_id")
 })
 @Data

@@ -16,7 +16,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "votes", uniqueConstraints = {
+@Table(name = "vote", uniqueConstraints = {
     @UniqueConstraint(name = "uk_vote_user_poll", columnNames = {"user_id", "poll_id"})
 }, indexes = {
     @Index(name = "idx_vote_poll_id", columnList = "poll_id"),
