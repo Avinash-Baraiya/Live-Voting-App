@@ -39,4 +39,10 @@ public class RedisVoteService {
             return 0L;
         }
     }
+    
+    public void pushVoteEvent(Long pollId, Long userId, Long optionId) {
+        String key = "vote:queue";
+        String value = pollId + ":" + userId + ":" + optionId;
+        redisTemplate.opsForList().rightPush(key, value);
+    }
 }

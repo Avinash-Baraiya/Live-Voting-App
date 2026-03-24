@@ -40,6 +40,13 @@ public class VoteService {
         } catch (Exception ex) {
             throw new com.avi.voting.exception.RedisUnavailableException("Redis increment failed", ex);
         }
+        // enqueue event for async DB persistence
+        try {
+            redisVoteService.pushVoteEvent(pollId, userId, optionId);
+        } catch (Exception ex) {
+            // log and continue; counts are already updated in Redis
+            throw new com.avi.voting.exception.RedisUnavailableException("Redis enqueue failed", ex);
+        }
         return "Vote recorded successfully";
     }
 }
