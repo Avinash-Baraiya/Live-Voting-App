@@ -29,4 +29,14 @@ public class RedisVoteService {
         String key = getVoteKey(pollId, optionId);
         redisTemplate.opsForValue().increment(key);
     }
+
+    public Long getVoteCount(Long pollId, Long optionId) {
+        String key = getVoteKey(pollId, optionId);
+        String value = redisTemplate.opsForValue().get(key);
+        try {
+            return value != null ? Long.valueOf(value) : 0L;
+        } catch (NumberFormatException ex) {
+            return 0L;
+        }
+    }
 }

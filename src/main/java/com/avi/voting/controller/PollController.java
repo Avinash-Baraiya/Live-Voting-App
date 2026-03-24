@@ -31,4 +31,9 @@ public class PollController {
     public String vote(@PathVariable Long pollId, @RequestBody VoteRequest request) {
         return voteService.vote(pollId, request.getUserId(), request.getOptionId());
     }
+
+    @org.springframework.web.bind.annotation.GetMapping("/{pollId}/results")
+    public com.avi.voting.dto.PollResultResponse getResults(@PathVariable Long pollId) {
+        return pollService.getPollResults(pollId);
+    }
 }

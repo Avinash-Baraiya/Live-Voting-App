@@ -5,9 +5,9 @@ spring:
 
   # Local PostgreSQL datasource (override with env vars if needed)
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/live_voting_db}
-    username: ${SPRING_DATASOURCE_USERNAME:postgres}
-    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://aws-1-ap-southeast-2.pooler.supabase.com:5432/postgres}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres.rpfxdhkirihjqyihyhpw}
+    password: ${SPRING_DATASOURCE_PASSWORD:Helohapy@111}
     driver-class-name: org.postgresql.Driver
 
   jpa:
