@@ -12,9 +12,11 @@ import com.avi.voting.entity.Vote;
 import com.avi.voting.repository.VoteRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class VoteFlushWorker {
 
     private final StringRedisTemplate redisTemplate;
@@ -51,7 +53,21 @@ public class VoteFlushWorker {
         }
 
         if (!votes.isEmpty()) {
-            voteRepository.saveAll(votes);
+            try {
+                voteRepository.saveAll(votes);
+                log.info("Flushed {} votes to DB", votes.size());
+            } catch (Exception ex) {
+                log.error("Failed to persist {} votes", votes.size(), ex);
+                // In case of DB failure, push back to Redis queue for retry
+                for (Vote v : votes) {
+                    try {
+                        String value = v.getPollId() + ":" + v.getUserId() + ":" + v.getOptionId();
+                        redisTemplate.opsForList().leftPush(QUEUE_KEY, value);
+                    } catch (Exception e) {
+                        log.error("Failed to requeue vote {}", v, e);
+                    }
+                }
+            }
         }
     }
 }

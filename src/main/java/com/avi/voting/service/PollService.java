@@ -15,9 +15,11 @@ import com.avi.voting.repository.PollOptionRepository;
 import com.avi.voting.repository.PollRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PollService {
 
         private final PollRepository pollRepository;
@@ -26,7 +28,9 @@ public class PollService {
 
     public CreatePollResponse createPoll(CreatePollRequest request) {
 
-        Poll poll = Poll.builder()
+                log.info("Creating poll: question='{}', optionsCount={}", request.getQuestion(), request.getOptions() == null ? 0 : request.getOptions().size());
+
+                Poll poll = Poll.builder()
                 .question(request.getQuestion())
                 .createdAt(Instant.now())
                 .expiresAt(request.getExpiresAt())
@@ -44,6 +48,8 @@ public class PollService {
 
         pollOptionRepository.saveAll(options);
 
+        log.info("Poll created: id={}, optionsSaved={}", savedPoll.getId(), options.size());
+
         return CreatePollResponse.builder()
                 .pollId(savedPoll.getId())
                 .message("Poll created successfully")
@@ -59,6 +65,8 @@ public class PollService {
                         Long count = redisVoteService.getVoteCount(pollId, option.getId());
                         results.put(option.getOptionText(), count);
                 }
+
+                log.info("Fetched results for pollId={}, options={}", pollId, results.size());
 
                 return com.avi.voting.dto.PollResultResponse.builder()
                                 .pollId(pollId)

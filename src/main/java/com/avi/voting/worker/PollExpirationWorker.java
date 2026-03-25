@@ -11,9 +11,11 @@ import com.avi.voting.entity.PollStatus;
 import com.avi.voting.repository.PollRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class PollExpirationWorker {
 
     private final PollRepository pollRepository;
@@ -21,12 +23,19 @@ public class PollExpirationWorker {
     @Scheduled(fixedDelay = 10000)
     public void closeExpiredPolls() {
         List<Poll> expired = pollRepository.findByStatusAndExpiresAtBefore(PollStatus.ACTIVE, Instant.now());
-        if (expired.isEmpty()) return;
+        if (expired.isEmpty()) {
+            return;
+        }
 
         for (Poll p : expired) {
             p.setStatus(PollStatus.CLOSED);
         }
 
-        pollRepository.saveAll(expired);
+        try {
+            pollRepository.saveAll(expired);
+            log.info("Closed {} expired polls", expired.size());
+        } catch (Exception ex) {
+            log.error("Failed to close expired polls", ex);
+        }
     }
 }
