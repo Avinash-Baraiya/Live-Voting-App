@@ -15,8 +15,12 @@ public class VoteService {
 
     private final RedisVoteService redisVoteService;
     private final PollRepository pollRepository;
+    private final com.avi.voting.redis.RateLimiterService rateLimiterService;
 
     public String vote(Long pollId, Long userId, Long optionId) {
+        if (!rateLimiterService.isAllowed(userId)) {
+            throw new com.avi.voting.exception.TooManyRequestsException("Too many requests. Please slow down.");
+        }
         Poll poll = pollRepository.findById(pollId)
                 .orElseThrow(() -> new com.avi.voting.exception.PollNotFoundException("Poll not found"));
 
