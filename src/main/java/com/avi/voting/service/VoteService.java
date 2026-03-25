@@ -28,6 +28,10 @@ public class VoteService {
             throw new com.avi.voting.exception.PollNotActiveException("Poll is not active");
         }
 
+        if (poll.getExpiresAt() != null && poll.getExpiresAt().isBefore(java.time.Instant.now())) {
+            throw new com.avi.voting.exception.PollExpiredException("Poll has expired");
+        }
+
         boolean isNew;
         try {
             isNew = redisVoteService.addVoter(pollId, userId);
