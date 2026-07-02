@@ -91,6 +91,15 @@ docker run -p 6379:6379 redis
 - Add WebSocket or SSE for live client updates.
 - Add observability (metrics, tracing, alerts).
 
+## AI Context Management
+
+Use [AI_CONTEXT.md](AI_CONTEXT.md), the .ai folder, and AGENTS.md to keep agent handoffs stable across coding sessions.
+
+- Start with [AI_CONTEXT.md](AI_CONTEXT.md) for the visible project summary and feature workflow.
+- Start with .ai/project-brief.md for the canonical system summary.
+- Record architecture or behavior decisions in .ai/decision-log.md.
+- Keep .ai/known-issues.md for recurring risks and follow-up items.
+
 ## Author
 
 Avinash# Live-Voting-App
