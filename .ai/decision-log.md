@@ -12,3 +12,5 @@
 - Removed hardcoded datasource/Redis credential fallbacks from application.yaml; all secrets now come from environment variables (template in .env.example) and startup fails fast if datasource values are missing.
 - Moved Redis settings to spring.data.redis.* because Spring Boot 3+ no longer binds spring.redis.*; existing SPRING_REDIS_* env var names are kept.
 - Added vote option validation backed by a Redis set per poll (poll:{pollId}:options) so the check adds one Redis call, not a DB query, per vote.
+- Added Spring Boot Actuator health checks (db, redis, voteQueue); details are hidden unless HEALTH_SHOW_DETAILS=always so public servers do not expose them.
+- Work is committed directly to main; no pull requests.

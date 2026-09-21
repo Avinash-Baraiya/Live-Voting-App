@@ -69,3 +69,13 @@ graphify-out/wiki/
 graphify-out/cypher.txt
 graphify-out/graph.svg
 graphify-out/graph.graphml
+
+# Postman local workspace link (per-machine, not shared)
+.postman/
+postman/globals/
+postman/collections/
+postman/documents/
+postman/environments/
+postman/flows/
+postman/mocks/
+postman/specs/

@@ -20,6 +20,8 @@ Real-time voting backend for high-concurrency polls. Redis handles low-latency v
 - 2026-07-02 | Live vote acceptance | active | src/main/java/com/avi/voting/controller/PollController.java, src/main/java/com/avi/voting/service/VoteService.java, src/main/java/com/avi/voting/redis/RedisVoteService.java | Accepts votes through Redis first for low-latency processing.
 - 2026-07-02 | Result retrieval | active | src/main/java/com/avi/voting/controller/PollController.java | Returns live poll results.
 - 2026-09-21 | Vote option validation | active | src/main/java/com/avi/voting/service/VoteService.java, src/main/java/com/avi/voting/redis/RedisVoteService.java, src/main/java/com/avi/voting/service/PollService.java | Rejects votes whose option does not belong to the poll (400), using a cached Redis option set with DB fallback.
+- 2026-09-21 | Health checks and Postman collection | active | pom.xml, src/main/java/com/avi/voting/health/VoteQueueHealthIndicator.java, src/main/resources/application.yaml, postman/ | /actuator/health reports PostgreSQL, Redis and the vote:queue backlog; Postman collection covers the API flow.
+- 2026-09-21 | Option IDs in create-poll response | active | src/main/java/com/avi/voting/dto/CreatePollResponse.java, src/main/java/com/avi/voting/dto/PollOptionResponse.java, src/main/java/com/avi/voting/service/PollService.java | POST /poll returns each option's ID so clients can vote.
 - 2026-09-21 | k6 load testing | removed | scripts/k6/vote_test.js, RUNBOOK.md | Load-test script and runbook references deleted; no longer used.
 
 ## Feature update rule

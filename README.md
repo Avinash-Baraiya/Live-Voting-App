@@ -84,6 +84,25 @@ source .env && ./mvnw spring-boot:run
 
 No credentials live in `application.yaml`; the app fails at startup if `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME` or `SPRING_DATASOURCE_PASSWORD` is missing. For Supabase, use the Session pooler connection (IPv4).
 
+## Checking PostgreSQL and Redis
+
+With `HEALTH_SHOW_DETAILS=always` in `.env`, `GET /actuator/health` reports each dependency:
+
+- `db`: PostgreSQL connection
+- `redis`: Redis connection
+- `voteQueue`: votes waiting in `vote:queue` to be saved to PostgreSQL (`pendingVotes`)
+
+`/health` only confirms the app process is up.
+
+## Testing with Postman
+
+Import both files from `postman/` into Postman and select the **Live Voting - Local** environment (`baseUrl` = `http://localhost:8080`):
+
+- `postman/Live-Voting-App.postman_collection.json`
+- `postman/local.postman_environment.json`
+
+Run the "2. Poll flow" folder in order with the Collection Runner. It creates a poll, votes, and checks the duplicate, invalid-option, missing-field and unknown-poll errors, then checks the results.
+
 ## Design Notes
 
 - Votes are handled in Redis for low-latency counting. Redis operations are atomic (`SADD`, `INCR`).

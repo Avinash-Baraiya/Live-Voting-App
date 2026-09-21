@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import com.avi.voting.dto.CreatePollRequest;
 import com.avi.voting.dto.CreatePollResponse;
+import com.avi.voting.dto.PollOptionResponse;
 import com.avi.voting.entity.Poll;
 import com.avi.voting.entity.PollOption;
 import com.avi.voting.entity.PollStatus;
@@ -61,6 +62,12 @@ public class PollService {
         return CreatePollResponse.builder()
                 .pollId(savedPoll.getId())
                 .message("Poll created successfully")
+                .options(savedOptions.stream()
+                        .map(o -> PollOptionResponse.builder()
+                                .optionId(o.getId())
+                                .optionText(o.getOptionText())
+                                .build())
+                        .toList())
                 .build();
     }
 

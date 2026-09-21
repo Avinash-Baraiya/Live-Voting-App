@@ -1,0 +1,407 @@
+{
+  "info": {
+    "name": "Live Voting App (local)",
+    "description": "Local API tests for Live-Voting-App. Import this file together with local.postman_environment.json and select the 'Live Voting - Local' environment. Run folder 2 in order (Collection Runner) to exercise the whole flow.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Health",
+      "item": [
+        {
+          "name": "Actuator health (PostgreSQL + Redis + queue)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('app is UP', () => pm.expect(pm.response.json().status).to.eql('UP'));",
+                  "const c = pm.response.json().components || {};",
+                  "pm.test('PostgreSQL (db) is UP', () => pm.expect(c.db && c.db.status).to.eql('UP'));",
+                  "pm.test('Redis is UP', () => pm.expect(c.redis && c.redis.status).to.eql('UP'));",
+                  "pm.test('vote queue reported', () => pm.expect(c.voteQueue.details).to.have.property('pendingVotes'));",
+                  "console.log('pending votes in queue:', c.voteQueue && c.voteQueue.details.pendingVotes);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "actuator",
+                "health"
+              ]
+            },
+            "description": "Shows each dependency. Needs HEALTH_SHOW_DETAILS=always (set in .env) to see components."
+          }
+        },
+        {
+          "name": "Simple ping",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Only proves the app process is up; does not check PostgreSQL or Redis."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Poll flow (run in order)",
+      "item": [
+        {
+          "name": "Create poll",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.collectionVariables.set('pollId', b.pollId);",
+                  "pm.collectionVariables.set('optionA', b.options[0].optionId);",
+                  "pm.collectionVariables.set('optionB', b.options[1].optionId);",
+                  "pm.test('returns option IDs', () => pm.expect(b.options).to.have.lengthOf(2));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/poll",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "poll"
+              ]
+            },
+            "description": "Saves pollId, optionA and optionB into collection variables for the next requests.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"Postman test poll\",\n  \"options\": [\n    \"Option A\",\n    \"Option B\"\n  ],\n  \"expiresAt\": \"2099-12-31T23:59:59Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Vote (valid)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// fresh voter per run so the vote is never a duplicate from an earlier run",
+                  "pm.collectionVariables.set('userId', Date.now() % 1000000000);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 vote recorded', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/poll/{{pollId}}/vote",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "poll",
+                "{{pollId}}",
+                "vote"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{userId}},\n  \"optionId\": {{optionA}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Vote again (duplicate -> 409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('409 duplicate rejected', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/poll/{{pollId}}/vote",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "poll",
+                "{{pollId}}",
+                "vote"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{userId}},\n  \"optionId\": {{optionA}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Vote wrong option (-> 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 invalid option', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/poll/{{pollId}}/vote",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "poll",
+                "{{pollId}}",
+                "vote"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 123456789,\n  \"optionId\": 999999999\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Vote missing optionId (-> 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 missing field', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/poll/{{pollId}}/vote",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "poll",
+                "{{pollId}}",
+                "vote"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 123456789\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Vote unknown poll (-> 404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('404 poll not found', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/poll/999999999/vote",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "poll",
+                "999999999",
+                "vote"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 123456789,\n  \"optionId\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Get results",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Option A has the vote', () => pm.expect(pm.response.json().results['Option A']).to.be.at.least(1));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/poll/{{pollId}}/results",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "poll",
+                "{{pollId}}",
+                "results"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "pollId",
+      "value": ""
+    },
+    {
+      "key": "optionA",
+      "value": ""
+    },
+    {
+      "key": "optionB",
+      "value": ""
+    },
+    {
+      "key": "userId",
+      "value": ""
+    }
+  ]
+}

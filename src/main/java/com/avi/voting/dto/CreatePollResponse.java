@@ -1,5 +1,7 @@
 package com.avi.voting.dto;
 
+import java.util.List;
+
 import lombok.Builder;
 import lombok.Data;
 
@@ -9,4 +11,5 @@ public class CreatePollResponse {
 
     private Long pollId;
     private String message;
+    private List<PollOptionResponse> options;
 }

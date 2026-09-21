@@ -27,3 +27,14 @@ spring:
 
 server:
   port: ${SERVER_PORT:8080}
+
+# /actuator/health reports PostgreSQL (db), Redis (redis) and the vote:queue backlog (voteQueue).
+# Details are hidden by default; set HEALTH_SHOW_DETAILS=always locally to see each component.
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: ${HEALTH_SHOW_DETAILS:never}
