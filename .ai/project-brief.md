@@ -19,6 +19,7 @@ Real-time voting backend for high-concurrency polls. Redis handles low-latency v
 - 2026-07-02 | Real-time poll creation | active | src/main/java/com/avi/voting/controller/PollController.java, src/main/java/com/avi/voting/service/PollService.java | Creates a poll with options and expiry.
 - 2026-07-02 | Live vote acceptance | active | src/main/java/com/avi/voting/controller/PollController.java, src/main/java/com/avi/voting/service/VoteService.java, src/main/java/com/avi/voting/redis/RedisVoteService.java | Accepts votes through Redis first for low-latency processing.
 - 2026-07-02 | Result retrieval | active | src/main/java/com/avi/voting/controller/PollController.java | Returns live poll results.
+- 2026-09-21 | k6 load testing | removed | scripts/k6/vote_test.js, RUNBOOK.md | Load-test script and runbook references deleted; no longer used.
 
 ## Feature update rule
 - When a new feature is added, extend the feature register with the date, status, touched files, and a one-line summary.
