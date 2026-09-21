@@ -34,7 +34,7 @@ redis-cli LLEN vote:queue
 ## Failure scenarios (symptoms → immediate actions → remediation)
 
 ### 1) Redis unreachable / connection errors
-- Symptoms: `503` on vote endpoints, logs show `RedisUnavailableException`, high `http_req_failed` in load tests.
+- Symptoms: `503` on vote endpoints, logs show `RedisUnavailableException`.
 - Immediate actions:
   - `redis-cli -h $HOST -p $PORT PING`
   - If using Docker: `docker ps` → `docker restart <container>`
@@ -117,20 +117,13 @@ WHERE a.id > b.id
 2. If Redis down: bring Redis up; do not purge `vote:queue`.
 3. If DB down: fix DB, then monitor queue drain and dedupe if necessary.
 4. If duplicate entries suspected: run dedupe SQL and reconcile counters.
-5. After recovery, run smoke tests (create poll, vote, fetch results) and re-run a small k6 test.
+5. After recovery, run smoke tests (create poll, vote, fetch results).
 
 ## Monitoring & alerts (suggested)
 - Alert if `LLEN vote:queue` > 10k for > 5 minutes.
 - Alert on Redis connection errors or `RedisUnavailableException` rate spike.
-- Alert on `http_req_failed` rate from load tests or 5xx rate in production > 1%.
+- Alert on 5xx rate in production > 1%.
 - Track `vote` endpoint p95 latency, p99 latency, and error rates.
-
-## Load testing
-- k6 script: `scripts/k6/vote_test.js`
-- Example run:
-```bash
-k6 run --env RATE=1000 --env DURATION=5m --env BASE=http://localhost:8080 scripts/k6/vote_test.js
-```
 
 ## Short-term improvements (recommended)
 - Make DB inserts idempotent (`ON CONFLICT DO NOTHING`).
@@ -141,7 +134,6 @@ k6 run --env RATE=1000 --env DURATION=5m --env BASE=http://localhost:8080 script
 - Controller: [src/main/java/com/avi/voting/controller/PollController.java](src/main/java/com/avi/voting/controller/PollController.java)
 - Vote worker: [src/main/java/com/avi/voting/worker/VoteFlushWorker.java](src/main/java/com/avi/voting/worker/VoteFlushWorker.java)
 - Redis helpers: [src/main/java/com/avi/voting/redis/RedisVoteService.java](src/main/java/com/avi/voting/redis/RedisVoteService.java)
-- Load test: [scripts/k6/vote_test.js](scripts/k6/vote_test.js)
 
 ## Author / on-call
 - Avinash
