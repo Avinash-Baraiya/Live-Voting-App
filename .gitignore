@@ -54,3 +54,18 @@ logs/
 *~
 
 extensions.txt
+
+# graphify (knowledge graph)
+# Committed: graphify-out/graph.json and graphify-out/GRAPH_REPORT.md
+# Ignored: extraction cache, machine-specific paths, run bookkeeping, generated viz
+graphify-out/cache/
+graphify-out/.graphify_*
+graphify-out/manifest.json
+graphify-out/cost.json
+graphify-out/.needs_update
+graphify-out/graph.html
+graphify-out/obsidian/
+graphify-out/wiki/
+graphify-out/cypher.txt
+graphify-out/graph.svg
+graphify-out/graph.graphml
