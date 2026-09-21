@@ -9,3 +9,6 @@
 
 ## 2026-09-21
 - Removed k6 load testing (scripts/k6/vote_test.js) and its RUNBOOK references; it is no longer part of the project's tooling.
+- Removed hardcoded datasource/Redis credential fallbacks from application.yaml; all secrets now come from environment variables (template in .env.example) and startup fails fast if datasource values are missing.
+- Moved Redis settings to spring.data.redis.* because Spring Boot 3+ no longer binds spring.redis.*; existing SPRING_REDIS_* env var names are kept.
+- Added vote option validation backed by a Redis set per poll (poll:{pollId}:options) so the check adds one Redis call, not a DB query, per vote.

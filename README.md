@@ -70,13 +70,19 @@ Response example:
 docker run -p 6379:6379 redis
 ```
 
-2. Configure PostgreSQL connection in `src/main/resources/application.yaml`.
+2. Create your local config from the template and fill in real values (`.env` is gitignored, never commit it):
+
+```bash
+cp .env.example .env
+```
 
 3. Run the app:
 
 ```bash
-./mvnw spring-boot:run
+source .env && ./mvnw spring-boot:run
 ```
+
+No credentials live in `application.yaml`; the app fails at startup if `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME` or `SPRING_DATASOURCE_PASSWORD` is missing. For Supabase, use the Session pooler connection (IPv4).
 
 ## Design Notes
 

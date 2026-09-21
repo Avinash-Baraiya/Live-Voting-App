@@ -46,7 +46,15 @@ public class PollService {
                         .build())
                 .collect(Collectors.toList());
 
-        pollOptionRepository.saveAll(options);
+        List<PollOption> savedOptions = pollOptionRepository.saveAll(options);
+
+        // Cache option IDs for vote validation; VoteService reloads them from the DB if this fails
+        try {
+                redisVoteService.cachePollOptions(savedPoll.getId(),
+                                savedOptions.stream().map(PollOption::getId).toList());
+        } catch (Exception ex) {
+                log.warn("Could not cache option IDs for pollId={}", savedPoll.getId(), ex);
+        }
 
         log.info("Poll created: id={}, optionsSaved={}", savedPoll.getId(), options.size());
 

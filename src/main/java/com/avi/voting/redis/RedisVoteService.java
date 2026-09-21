@@ -1,5 +1,7 @@
 package com.avi.voting.redis;
 
+import java.util.Collection;
+
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +19,24 @@ public class RedisVoteService {
 
     private String getVoterKey(Long pollId) {
         return "poll:" + pollId + ":voters";
+    }
+
+    private String getOptionsKey(Long pollId) {
+        return "poll:" + pollId + ":options";
+    }
+
+    public void cachePollOptions(Long pollId, Collection<Long> optionIds) {
+        if (optionIds.isEmpty()) return;
+        String[] members = optionIds.stream().map(String::valueOf).toArray(String[]::new);
+        redisTemplate.opsForSet().add(getOptionsKey(pollId), members);
+    }
+
+    public boolean isPollOption(Long pollId, Long optionId) {
+        return Boolean.TRUE.equals(redisTemplate.opsForSet().isMember(getOptionsKey(pollId), String.valueOf(optionId)));
+    }
+
+    public boolean hasPollOptions(Long pollId) {
+        return Boolean.TRUE.equals(redisTemplate.hasKey(getOptionsKey(pollId)));
     }
 
     public boolean addVoter(Long pollId, Long userId) {

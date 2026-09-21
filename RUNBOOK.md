@@ -28,6 +28,7 @@ redis-cli LLEN vote:queue
 ## Redis key conventions
 - Vote counter: `poll:{pollId}:option:{optionId}`
 - Voter set: `poll:{pollId}:voters` (prevents duplicates via SADD)
+- Option set: `poll:{pollId}:options` (valid option IDs; rebuilt from DB if missing)
 - Persistence queue: `vote:queue` (entries: `pollId:userId:optionId`)
 - Rate limiter: `rate_limit:{userId}`
 
@@ -38,7 +39,7 @@ redis-cli LLEN vote:queue
 - Immediate actions:
   - `redis-cli -h $HOST -p $PORT PING`
   - If using Docker: `docker ps` → `docker restart <container>`
-  - Check `SPRING_REDIS_HOST`/`SPRING_REDIS_PORT` env vars.
+  - Check `SPRING_REDIS_HOST`/`SPRING_REDIS_PORT`/`SPRING_REDIS_PASSWORD`/`SPRING_REDIS_SSL` env vars (bound to `spring.data.redis.*`).
 - Remediation:
   - Restore Redis service; ensure password/ACLs match app config.
   - After restore, monitor `vote:queue` and let `VoteFlushWorker` drain backlog.

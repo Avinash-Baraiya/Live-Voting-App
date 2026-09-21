@@ -1,25 +1,29 @@
 # Application name and core config
+# Secrets are never stored here. Provide them through environment variables
+# (see .env.example); the app fails fast at startup if a required one is missing.
 spring:
   application:
     name: voting
 
-  # Local PostgreSQL datasource (override with env vars if needed)
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://aws-1-ap-southeast-2.pooler.supabase.com:5432/postgres}
-    username: ${SPRING_DATASOURCE_USERNAME:postgres.rpfxdhkirihjqyihyhpw}
-    password: ${SPRING_DATASOURCE_PASSWORD:Helohapy@111}
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
+    show-sql: ${SPRING_JPA_SHOW_SQL:false}
 
-  redis:
-    host: ${SPRING_REDIS_HOST:localhost}
-    port: ${SPRING_REDIS_PORT:6379}
-    password: ${SPRING_REDIS_PASSWORD:}
+  # Spring Boot 3+ reads Redis settings from spring.data.redis (spring.redis is no longer bound)
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST:localhost}
+      port: ${SPRING_REDIS_PORT:6379}
+      password: ${SPRING_REDIS_PASSWORD:}
+      ssl:
+        enabled: ${SPRING_REDIS_SSL:false}
 
 server:
-  port: 8080
-
+  port: ${SERVER_PORT:8080}

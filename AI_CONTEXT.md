@@ -39,8 +39,8 @@ Real-time voting backend for high-concurrency polls. Redis handles low-latency v
 
 ## Quick start
 1. Start Redis.
-2. Configure PostgreSQL in `src/main/resources/application.yaml`.
-3. Run `./mvnw spring-boot:run`.
+2. Copy `.env.example` to `.env` and fill in PostgreSQL/Redis values (never commit `.env`).
+3. Run `source .env && ./mvnw spring-boot:run`.
 
 ## If you are adding a feature
 - Keep the change narrow and update the owning service or worker first.
