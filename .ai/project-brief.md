@@ -22,6 +22,7 @@ Real-time voting backend for high-concurrency polls. Redis handles low-latency v
 - 2026-09-21 | Vote option validation | active | src/main/java/com/avi/voting/service/VoteService.java, src/main/java/com/avi/voting/redis/RedisVoteService.java, src/main/java/com/avi/voting/service/PollService.java | Rejects votes whose option does not belong to the poll (400), using a cached Redis option set with DB fallback.
 - 2026-09-21 | Health checks and Postman collection | active | pom.xml, src/main/java/com/avi/voting/health/VoteQueueHealthIndicator.java, src/main/resources/application.yaml, postman/ | /actuator/health reports PostgreSQL, Redis and the vote:queue backlog; Postman collection covers the API flow.
 - 2026-09-21 | Option IDs in create-poll response | active | src/main/java/com/avi/voting/dto/CreatePollResponse.java, src/main/java/com/avi/voting/dto/PollOptionResponse.java, src/main/java/com/avi/voting/service/PollService.java | POST /poll returns each option's ID so clients can vote.
+- 2026-10-03 | Resilience/load test harness | active | resilience-tests/scripts/, resilience-tests/FINDINGS.md, resilience-tests/PROGRESS.md | Scripted load and failure tests (results/ and .run/ are git-ignored per-run output).
 - 2026-09-21 | k6 load testing | removed | scripts/k6/vote_test.js, RUNBOOK.md | Load-test script and runbook references deleted; no longer used.
 
 ## Feature update rule
@@ -35,6 +36,11 @@ Real-time voting backend for high-concurrency polls. Redis handles low-latency v
 3. RedisVoteService prevents duplicate votes and increments the live counter.
 4. Vote event is pushed to vote:queue.
 5. VoteFlushWorker drains the queue and persists votes to PostgreSQL.
+
+## Measured performance (2026-09-22, Apple M4, local PostgreSQL + Redis)
+- Vote API plateaus at ~12,000-13,000 votes/s from 50 concurrent connections up; no errors to 500 connections (p50 40 ms there).
+- VoteFlushWorker drains vote:queue at ~200 votes/s (1,000 rows every ~5 s) - about 60x slower than the API accepts.
+- Consequence: 2.5 minutes of load left 1,826,851 votes queued, ~152 minutes from reaching PostgreSQL. Raw numbers in resilience-tests/FINDINGS.md.
 
 ## Important invariants
 - Redis is the first source for live vote acceptance and counting.

@@ -14,3 +14,7 @@
 - Added vote option validation backed by a Redis set per poll (poll:{pollId}:options) so the check adds one Redis call, not a DB query, per vote.
 - Added Spring Boot Actuator health checks (db, redis, voteQueue); details are hidden unless HEALTH_SHOW_DETAILS=always so public servers do not expose them.
 - Work is committed directly to main; no pull requests.
+
+## 2026-10-03
+- Load and failure testing lives in resilience-tests/: scripts and findings are committed, per-run output (results/, .run/, node_modules/) is git-ignored because every run regenerates it.
+- Measured numbers are recorded in .ai/project-brief.md and resilience-tests/FINDINGS.md so agents do not re-measure before changing the vote path.

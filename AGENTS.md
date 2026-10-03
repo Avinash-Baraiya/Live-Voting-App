@@ -7,6 +7,7 @@ Before making changes, read these files in order:
 2. .ai/decision-log.md
 3. README.md
 4. RUNBOOK.md
+5. resilience-tests/FINDINGS.md (measured throughput and failure behavior)
 
 Working rules:
 - Treat .ai/project-brief.md as the stable summary of the system.
@@ -17,6 +18,8 @@ Working rules:
 - Do not change secrets or credentials in source files; prefer environment variables.
 - Preserve the core voting flow: Redis first, duplicate vote prevention, rate limiting, and async persistence.
 - Validate focused changes before expanding scope.
+- Before changing the vote or persistence path, read the measured numbers in resilience-tests/FINDINGS.md instead of re-measuring; re-run the harness only to confirm a change.
+- Never commit per-run test output (resilience-tests/results/, .run/, node_modules/); keep conclusions in FINDINGS.md.
 
 Hand-off standard:
 - State the task, touched files, current risk, and next validation step.
