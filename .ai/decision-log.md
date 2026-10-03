@@ -18,3 +18,4 @@
 ## 2026-10-03
 - Load and failure testing lives in resilience-tests/: scripts and findings are committed, per-run output (results/, .run/, node_modules/) is git-ignored because every run regenerates it.
 - Measured numbers are recorded in .ai/project-brief.md and resilience-tests/FINDINGS.md so agents do not re-measure before changing the vote path.
+- Approved moving to a Kafka-first design (Kafka as the record of truth; Redis and PostgreSQL derived by idempotent consumers). Decisions D1-D9, environments (local Docker or cloud per service) and phases are in .ai/kafka-migration-plan.md.

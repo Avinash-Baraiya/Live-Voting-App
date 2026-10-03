@@ -14,6 +14,7 @@
 - A failed batch is re-queued whole, so one duplicate can make the same batch fail on every retry.
 
 ## Future improvements
+- The confirmed bottleneck and data-loss issues above are addressed by .ai/kafka-migration-plan.md (not started).
 - Fix the persistence path first: bulk LPOP, JDBC batch insert with ON CONFLICT DO NOTHING, drain until empty.
 - Move vote:queue to Redis Streams (XADD/XREADGROUP/XACK) so votes survive a crash.
 - Resilience test groups B-E (consistency, Redis/PostgreSQL failures, app crash) and A4-A6 were interrupted and need a clean re-run; see resilience-tests/PROGRESS.md.
