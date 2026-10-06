@@ -7,13 +7,13 @@ Short runbook and failure scenarios for the Live Voting backend (Redis + Postgre
 - Short checklist for on-call engineers to triage and remediate incidents.
 
 ## Quick actions
-- Start Redis (local):
+- Start everything (Redis + PostgreSQL in Docker, then the app):
 ```bash
-docker run -p 6379:6379 --name redis -d redis
+./run.sh local --fast
 ```
-- Start app:
+- Check health and which backends the running app uses:
 ```bash
-./mvnw spring-boot:run
+./run.sh smoke
 ```
 - Check Redis queue length:
 ```bash

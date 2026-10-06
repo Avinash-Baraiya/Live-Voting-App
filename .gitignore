@@ -44,8 +44,10 @@ dist/
 # OS files
 .DS_Store
 
-# Environment files
+# Environment files: real values never committed; *.example templates are
 .env
+.env.*
+!.env.*.example
 
 # Redis/DB logs
 logs/

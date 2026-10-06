@@ -47,6 +47,11 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
+		<!-- Publishes metrics at /actuator/prometheus for Prometheus to scrape -->
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-registry-prometheus</artifactId>
+		</dependency>
 
 		<!-- Database driver -->
 		<dependency>

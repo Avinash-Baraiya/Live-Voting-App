@@ -5,7 +5,7 @@
 - New feature work should be appended to the feature register in .ai/project-brief.md and reflected here when it creates follow-up work.
 
 ## Technical risk
-- The Supabase database password was committed in earlier revisions of application.yaml; it must be rotated in Supabase (removing it from the file does not remove it from git history).
+- An old Supabase database password is in the git history of application.yaml. Supabase is no longer used (local only since 2026-10-07); delete or reset that Supabase project so the old password is useless.
 
 ## Confirmed bottleneck (measured 2026-09-22)
 - Persistence ceiling: VoteFlushWorker saves ~200 votes/s while the API accepts ~12-13k/s, so vote:queue grows without bound under load and PostgreSQL lags by minutes to hours.

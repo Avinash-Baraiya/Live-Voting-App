@@ -1,0 +1,138 @@
+# Local infrastructure for Live-Voting-App.
+# Each service has a profile, so you start only what should run locally:
+#   docker compose --profile redis --profile postgres up -d   # both local
+#   docker compose --profile kafka up -d                      # Kafka + Kafka UI
+#   docker compose --profile monitoring up -d                 # Prometheus + Grafana
+#   docker compose down                                       # stop (data is kept in volumes)
+#   docker compose down -v                                    # stop AND delete all local data
+# Ports are bound to 127.0.0.1 so they are reachable only from this Mac, not the network.
+name: live-voting
+
+services:
+  redis:
+    image: redis:8
+    profiles: ["redis"]
+    # AOF ("append-only file") writes every change to disk, flushed once per second,
+    # so a restart loses at most ~1 second of data instead of everything.
+    command: ["redis-server", "--appendonly", "yes", "--appendfsync", "everysec"]
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16
+    profiles: ["postgres"]
+    environment:
+      POSTGRES_DB: voting
+      POSTGRES_USER: voting
+      # Local-only container bound to 127.0.0.1; override with LOCAL_PG_PASSWORD if you like.
+      POSTGRES_PASSWORD: ${LOCAL_PG_PASSWORD:-voting}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U voting -d voting"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # Single Kafka broker in KRaft mode (Kafka manages its own metadata; no ZooKeeper).
+  # One broker is fine for learning and local tests; production uses 3+ for replication.
+  kafka:
+    image: apache/kafka:4.1.0
+    profiles: ["kafka"]
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller   # this one node is both the data server and the coordinator
+      CLUSTER_ID: live-voting-local-kafka01
+      # Two doors into the broker:
+      #   PLAINTEXT_HOST -> localhost:9092 for things on your Mac (the app, CLI tools)
+      #   PLAINTEXT      -> kafka:29092    for other containers (Kafka UI) on Docker's network
+      KAFKA_LISTENERS: PLAINTEXT://:29092,PLAINTEXT_HOST://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      # Only one broker exists, so Kafka's internal topics can keep just one copy.
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      # Production habit: topics are created on purpose, never by a typo.
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+    ports:
+      - "127.0.0.1:9092:9092"
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1"]
+      interval: 5s
+      timeout: 10s
+      retries: 20
+    restart: unless-stopped
+
+  # Web UI to see topics, partitions, messages, offsets and consumer groups: http://localhost:8090
+  kafka-ui:
+    image: ghcr.io/kafbat/kafka-ui:v1.3.0
+    profiles: ["kafka"]
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+    ports:
+      - "127.0.0.1:8090:8080"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Prometheus: scrapes the app's /actuator/prometheus every 5 s and stores the history.
+  # UI (raw queries): http://localhost:9090
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    profiles: ["monitoring"]
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "127.0.0.1:9090:9090"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # lets the container reach the app running on the Mac
+    restart: unless-stopped
+
+  # Grafana: dashboards on top of Prometheus. http://localhost:3000 (no login locally)
+  grafana:
+    image: grafana/grafana:12.1.0
+    profiles: ["monitoring"]
+    environment:
+      # Local-only convenience (port bound to 127.0.0.1): open without a login.
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/live-voting.json
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+volumes:
+  redis-data:
+  pg-data:
+  kafka-data:
+  prometheus-data:
+  grafana-data:

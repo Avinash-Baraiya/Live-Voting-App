@@ -11,6 +11,8 @@ import org.springframework.stereotype.Component;
 import com.avi.voting.entity.Vote;
 import com.avi.voting.repository.VoteRepository;
 
+import io.micrometer.core.instrument.MeterRegistry;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,6 +23,7 @@ public class VoteFlushWorker {
 
     private final StringRedisTemplate redisTemplate;
     private final VoteRepository voteRepository;
+    private final MeterRegistry meterRegistry;
 
     private static final String QUEUE_KEY = "vote:queue";
     private static final int BATCH_SIZE = 1000;
@@ -55,8 +58,10 @@ public class VoteFlushWorker {
         if (!votes.isEmpty()) {
             try {
                 voteRepository.saveAll(votes);
+                meterRegistry.counter("votes.persisted").increment(votes.size());
                 log.info("Flushed {} votes to DB", votes.size());
             } catch (Exception ex) {
+                meterRegistry.counter("votes.persist.failed").increment(votes.size());
                 log.error("Failed to persist {} votes", votes.size(), ex);
                 // In case of DB failure, push back to Redis queue for retry
                 for (Vote v : votes) {

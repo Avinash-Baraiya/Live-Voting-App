@@ -19,3 +19,8 @@
 - Load and failure testing lives in resilience-tests/: scripts and findings are committed, per-run output (results/, .run/, node_modules/) is git-ignored because every run regenerates it.
 - Measured numbers are recorded in .ai/project-brief.md and resilience-tests/FINDINGS.md so agents do not re-measure before changing the vote path.
 - Approved moving to a Kafka-first design (Kafka as the record of truth; Redis and PostgreSQL derived by idempotent consumers). Decisions D1-D9, environments (local Docker or cloud per service) and phases are in .ai/kafka-migration-plan.md.
+
+## 2026-10-07
+- Development and testing run locally only, in Docker (docker-compose.yml profiles: redis, postgres, kafka, monitoring), started through run.sh with settings from .env.local. The hybrid/cloud presets (Supabase, Redis Cloud) were tried and removed: a vote took ~1.7 s on cloud backends (Supabase in Sydney ~410 ms round trip from India) and free tiers cannot be load-tested. Their data was wiped. Configuration stays environment-variable driven, so a managed service can be added later without code changes.
+- Added Prometheus metrics (micrometer-registry-prometheus, /actuator/prometheus, request latency histograms, vote.queue.size gauge, votes.persisted counters) and a provisioned Grafana dashboard, so throughput and the persistence gap are visible live.
+- Redis database number is configurable (SPRING_REDIS_DATABASE, default 0).

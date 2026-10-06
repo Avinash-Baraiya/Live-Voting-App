@@ -22,6 +22,8 @@ Real-time voting backend for high-concurrency polls. Redis handles low-latency v
 - 2026-09-21 | Vote option validation | active | src/main/java/com/avi/voting/service/VoteService.java, src/main/java/com/avi/voting/redis/RedisVoteService.java, src/main/java/com/avi/voting/service/PollService.java | Rejects votes whose option does not belong to the poll (400), using a cached Redis option set with DB fallback.
 - 2026-09-21 | Health checks and Postman collection | active | pom.xml, src/main/java/com/avi/voting/health/VoteQueueHealthIndicator.java, src/main/resources/application.yaml, postman/ | /actuator/health reports PostgreSQL, Redis and the vote:queue backlog; Postman collection covers the API flow.
 - 2026-09-21 | Option IDs in create-poll response | active | src/main/java/com/avi/voting/dto/CreatePollResponse.java, src/main/java/com/avi/voting/dto/PollOptionResponse.java, src/main/java/com/avi/voting/service/PollService.java | POST /poll returns each option's ID so clients can vote.
+- 2026-10-07 | Local Docker environment | active | docker-compose.yml, run.sh, .env.local.example, src/main/java/com/avi/voting/config/BackendInfoContributor.java | Redis, PostgreSQL, Kafka + Kafka UI, Prometheus + Grafana in Docker; run.sh starts and checks them; /actuator/info shows which servers are in use.
+- 2026-10-07 | Metrics and Grafana dashboard | active | pom.xml, src/main/resources/application.yaml, src/main/java/com/avi/voting/metrics/VoteQueueMetrics.java, src/main/java/com/avi/voting/worker/VoteFlushWorker.java, monitoring/ | /actuator/prometheus with latency histograms, queue size and persisted-vote counters; "Live Voting" Grafana dashboard.
 - 2026-10-03 | Resilience/load test harness | active | resilience-tests/scripts/, resilience-tests/FINDINGS.md, resilience-tests/PROGRESS.md | Scripted load and failure tests (results/ and .run/ are git-ignored per-run output).
 - 2026-09-21 | k6 load testing | removed | scripts/k6/vote_test.js, RUNBOOK.md | Load-test script and runbook references deleted; no longer used.
 
@@ -56,7 +58,8 @@ Real-time voting backend for high-concurrency polls. Redis handles low-latency v
 - Rate limiter: src/main/java/com/avi/voting/redis/RateLimiterService.java
 - Queue worker: src/main/java/com/avi/voting/worker/VoteFlushWorker.java
 - Poll expiry worker: src/main/java/com/avi/voting/worker/PollExpirationWorker.java
-- Config: src/main/resources/application.yaml
+- Config: src/main/resources/application.yaml (all values from .env.local via run.sh)
+- Local stack: docker-compose.yml, run.sh, monitoring/
 - Runbook: RUNBOOK.md
 
 ## Current risk notes

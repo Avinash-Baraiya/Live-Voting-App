@@ -1,0 +1,11 @@
+# Prometheus visits ("scrapes") the app every 5 s and stores each metric with a timestamp.
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+  - job_name: voting-app
+    metrics_path: /actuator/prometheus
+    static_configs:
+      # The app runs on the Mac, not in Docker; host.docker.internal is "the Mac" seen from a container.
+      - targets: ["host.docker.internal:8080"]

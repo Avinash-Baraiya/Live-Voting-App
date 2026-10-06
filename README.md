@@ -62,31 +62,38 @@ Response example:
 }
 ```
 
-## Running Locally
+## Running the app
 
-1. Start Redis:
+Development runs fully on this machine: Redis and PostgreSQL in Docker, the app on the JVM. All connection settings come from environment variables in `.env.local`, so the code never contains credentials.
 
-```bash
-docker run -p 6379:6379 redis
-```
-
-2. Create your local config from the template and fill in real values (`.env` is gitignored, never commit it):
+1. Install and start Docker Desktop.
+2. Create your local settings (gitignored; works as is):
 
 ```bash
-cp .env.example .env
+cp .env.local.example .env.local
 ```
 
-3. Run the app:
+3. Run it. `run.sh` starts the containers, checks Redis and PostgreSQL are reachable, then starts the app:
 
 ```bash
-source .env && ./mvnw spring-boot:run
+./run.sh local --fast   # app ready in a few seconds (rebuilds the jar only when code changed)
+./run.sh smoke          # in another terminal: health + which servers the app uses
+./run.sh stop           # stop all containers (data is kept in Docker volumes)
 ```
 
-No credentials live in `application.yaml`; the app fails at startup if `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME` or `SPRING_DATASOURCE_PASSWORD` is missing. For Supabase, use the Session pooler connection (IPv4).
+| Service | Address | Login / notes |
+|---|---|---|
+| App | http://localhost:8080 | `/actuator/health`, `/actuator/info`, `/actuator/prometheus` |
+| PostgreSQL | `localhost:5432` | database, user and password: `voting` (pgAdmin: register a server with these) |
+| Redis | `localhost:6379` | database 0, no password (Redis Insight: `127.0.0.1:6379`) |
+| Kafka + Kafka UI | `localhost:9092`, http://localhost:8090 | optional: `docker compose --profile kafka up -d` |
+| Prometheus + Grafana | http://localhost:9090, http://localhost:3000 | optional: `docker compose --profile monitoring up -d`; dashboard "Live Voting" |
+
+Ports are bound to `127.0.0.1`, so none of these are reachable from other machines. The app fails at startup if the datasource variables are missing.
 
 ## Checking PostgreSQL and Redis
 
-With `HEALTH_SHOW_DETAILS=always` in `.env`, `GET /actuator/health` reports each dependency:
+With `HEALTH_SHOW_DETAILS=always` (set in `.env.local`), `GET /actuator/health` reports each dependency:
 
 - `db`: PostgreSQL connection
 - `redis`: Redis connection
